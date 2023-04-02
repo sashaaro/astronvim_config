@@ -1,11 +1,89 @@
 --              AstroNvim Configuration Table
 -- All configuration changes should go inside of the table below
-
 -- You can think of a Lua "table" as a dictionary like data structure the
 -- normal format is "key = value". These also handle array like data structures
 -- where a value with no key simply has an implicit numeric key
-local config = {
+local dapGoPort = os.getenv("GO_DAP_PORT")
 
+if not dapGoPort then dapGoPort = 9005 end
+
+local dap = {
+  adapters = {
+    go = {
+      type = "server",
+      -- host = "127.0.0.1",
+      port = dapGoPort
+    }
+  },
+  configurations = {
+    go = {
+      {
+        type = "go",
+        name = "delve container debug",
+        request = "attach",
+        mode = "remote",
+        -- hostname = "127.0.0.1",
+        -- post = "9005",
+        -- program = "/opt/app/${relativefiledirname}"
+        -- cwd = "${workspacefolder}",
+        substitutepath = {{from = "${workspaceFolder}", to = "/opt/app"}}
+        -- remotepath = "/opt/app",
+        -- pathmappings = {
+        --     {
+        --         remoteroot = "/opt/app"
+        --     }
+        -- program = "./cmd/chat"
+        -- }
+      }
+    }
+  }
+}
+
+-- table.insert(dap.configurations.go, {
+--     type = "go",
+--     name = "delve container cursor test debug",
+--     request = "attach",
+--     -- mode = "remote",
+--     program = "${workspaceRoot}",
+--     post = 9007,
+--     args = {"-test.v", "-test.run", "TestDialogCreate"},
+--     mode = "test",
+--     substitutepath = {{from = "${workspaceFolder}", to = "/opt/app"}}
+-- })
+
+dap.adapters.php = {
+  type = "executable",
+  command = "node",
+  args = {"/opt/vscode-php-debug/out/phpDebug.js"}
+}
+
+dap.adapters.delve = {
+  type = 'server',
+  port = '${port}',
+  executable = {command = 'dlv', args = {'dap', '-l', '127.0.0.1:${port}'}}
+}
+
+-- table.insert(dap.configurations.go, {
+--     type = "delve",
+--     name = "Debug test (go.mod)",
+--     request = "launch",
+--     mode = "test",
+--     program = "${workspaceRoot}",
+--     args = {"-test.run", "TestDialogCreate"}
+-- })
+
+dap.configurations.php = {
+  {
+    type = "php",
+    request = "launch",
+    name = "Listen for Xdebug",
+    port = 9003,
+    pathMappings = {["/opt/app"] = "${workspaceFolder}"}
+  }
+}
+
+local config = {
+  dap = dap,
   -- Configure AstroNvim updates
   updater = {
     remote = "origin", -- remote to use
@@ -17,17 +95,15 @@ local config = {
     skip_prompts = false, -- skip prompts about breaking changes
     show_changelog = true, -- show the changelog after performing an update
     auto_reload = false, -- automatically reload and sync packer after a successful update
-    auto_quit = false, -- automatically quit the current session after a successful update
+    auto_quit = false -- automatically quit the current session after a successful update
     -- remotes = { -- easily add new remotes to track
     --   ["remote_name"] = "https://remote_url.come/repo.git", -- full remote url
     --   ["remote2"] = "github_user/repo", -- GitHub user/repo shortcut,
     --   ["remote3"] = "github_user", -- GitHub user assume AstroNvim fork
     -- },
   },
-
   -- Set colorscheme to use
   colorscheme = "default_theme",
-
   -- Add highlight groups in any theme
   highlights = {
     -- init = { -- this table overrides highlights in all themes
@@ -37,16 +113,15 @@ local config = {
     --   Normal = { bg = "#000000" },
     -- },
   },
-
   -- set vim options here (vim.<first_key>.<second_key> = value)
   options = {
     opt = {
       -- set to true or false etc.
-      relativenumber = true, -- sets vim.opt.relativenumber
+      relativenumber = false, -- sets vim.opt.relativenumber
       number = true, -- sets vim.opt.number
       spell = false, -- sets vim.opt.spell
       signcolumn = "auto", -- sets vim.opt.signcolumn to auto
-      wrap = false, -- sets vim.opt.wrap
+      wrap = false -- sets vim.opt.wrap
     },
     g = {
       mapleader = " ", -- sets vim.g.mapleader
@@ -57,8 +132,8 @@ local config = {
       status_diagnostics_enabled = true, -- enable diagnostics in statusline
       icons_enabled = true, -- disable icons in the UI (disable if no nerd font is available, requires :PackerSync after changing)
       ui_notifications_enabled = true, -- disable notifications when toggling UI elements
-      heirline_bufferline = false, -- enable new heirline based bufferline (requires :PackerSync after changing)
-    },
+      heirline_bufferline = false -- enable new heirline based bufferline (requires :PackerSync after changing)
+    }
   },
   -- If you need more control, you can use the function()...end notation
   -- options = function(local_vim)
@@ -75,27 +150,23 @@ local config = {
     " █████  ███████ ████████ ██████   ██████",
     "██   ██ ██         ██    ██   ██ ██    ██",
     "███████ ███████    ██    ██████  ██    ██",
-    "██   ██      ██    ██    ██   ██ ██    ██",
+    "██   ██      ██  1 ██    ██   ██ ██    ██",
     "██   ██ ███████    ██    ██   ██  ██████",
     " ",
     "    ███    ██ ██    ██ ██ ███    ███",
     "    ████   ██ ██    ██ ██ ████  ████",
     "    ██ ██  ██ ██    ██ ██ ██ ████ ██",
     "    ██  ██ ██  ██  ██  ██ ██  ██  ██",
-    "    ██   ████   ████   ██ ██      ██",
+    "    ██   ████   ████   ██ ██      ██"
   },
-
   -- Default theme configuration
   default_theme = {
     -- Modify the color palette for the default theme
-    colors = {
-      fg = "#abb2bf",
-      bg = "#1e222a",
-    },
+    colors = {fg = "#abb2bf", bg = "#1e222a"},
     highlights = function(hl) -- or a function that returns a new table of colors to set
       local C = require "default_theme.colors"
 
-      hl.Normal = { fg = C.fg, bg = C.bg }
+      hl.Normal = {fg = C.fg, bg = C.bg}
 
       -- New approach instead of diagnostic_style
       hl.DiagnosticError.italic = true
@@ -125,16 +196,11 @@ local config = {
       telescope = true,
       treesitter = true,
       vimwiki = false,
-      ["which-key"] = true,
-    },
+      ["which-key"] = true
+    }
   },
-
   -- Diagnostics configuration (for vim.diagnostics.config({...})) when diagnostics are on
-  diagnostics = {
-    virtual_text = true,
-    underline = true,
-  },
-
+  diagnostics = {virtual_text = true, underline = true},
   -- Extend LSP configuration
   lsp = {
     -- enable servers that you already have installed without mason
@@ -150,22 +216,18 @@ local config = {
         },
         ignore_filetypes = { -- disable format on save for specified filetypes
           -- "python",
-        },
+        }
       },
       disabled = { -- disable formatting capabilities for the listed language servers
         -- "sumneko_lua",
       },
-      timeout_ms = 1000, -- default format timeout
+      timeout_ms = 1000 -- default format timeout
       -- filter = function(client) -- fully override the default formatting function
       --   return true
       -- end
     },
     -- easily add or disable built in mappings added during LSP attaching
-    mappings = {
-      n = {
-        -- ["<leader>lf"] = false -- disable formatting keymap
-      },
-    },
+    mappings = {n = {}},
     -- add to the global LSP on_attach function
     -- on_attach = function(client, bufnr)
     -- end,
@@ -189,9 +251,8 @@ local config = {
       --     },
       --   },
       -- },
-    },
+    }
   },
-
   -- Mapping data with "desc" stored directly by vim.keymap.set().
   --
   -- Please use this mappings table to set keyboard mapping since this is the
@@ -202,22 +263,30 @@ local config = {
     n = {
       -- second key is the lefthand side of the map
       -- mappings seen under group name "Buffer"
-      ["<leader>bb"] = { "<cmd>tabnew<cr>", desc = "New tab" },
-      ["<leader>bc"] = { "<cmd>BufferLinePickClose<cr>", desc = "Pick to close" },
-      ["<leader>bj"] = { "<cmd>BufferLinePick<cr>", desc = "Pick to jump" },
-      ["<leader>bt"] = { "<cmd>BufferLineSortByTabs<cr>", desc = "Sort by tabs" },
+      ["<leader>bb"] = {"<cmd>tabnew<cr>", desc = "New tab"},
+      ["<leader>bc"] = {"<cmd>BufferLinePickClose<cr>", desc = "Pick to close"},
+      ["<leader>bj"] = {"<cmd>BufferLinePick<cr>", desc = "Pick to jump"},
+      ["<leader>bt"] = {"<cmd>BufferLineSortByTabs<cr>", desc = "Sort by tabs"},
+      ["<leader>m"] = {"<cmd>HopWord<cr>", desc = "Hop words"}
       -- quick save
       -- ["<C-s>"] = { ":w!<cr>", desc = "Save File" },  -- change description but the same command
     },
     t = {
       -- setting a mapping to false will disable it
       -- ["<esc>"] = false,
-    },
+    }
   },
-
   -- Configure plugins
   plugins = {
     init = {
+      {
+        "phaazon/hop.nvim",
+        branch = 'v2',
+        config = function() require'hop'.setup {} end
+      }, {"christoomey/vim-tmux-navigator"}, {
+        "/home/sasha/.config/nvim/lua/user/myplug",
+        config = function() require('my').setup {} end
+      }
       -- You can disable default plugins as follows:
       -- ["goolord/alpha-nvim"] = { disable = true },
 
@@ -241,6 +310,10 @@ local config = {
       -- },
     },
     -- All other entries override the require("<key>").setup({...}) call for default plugins
+    telescope = function(config)
+      config.defaults.file_ignore_patterns = {'var/cache/.*'}
+      return config
+    end,
     ["null-ls"] = function(config) -- overrides `require("null-ls").setup(config)`
       -- config variable is the default configuration table for the setup function call
       -- local null_ls = require "null-ls"
@@ -256,7 +329,7 @@ local config = {
       return config -- return final config table
     end,
     treesitter = { -- overrides `require("treesitter").setup(...)`
-      -- ensure_installed = { "lua" },
+      ensure_installed = {"lua"}
     },
     -- use mason-lspconfig to configure LSP installations
     ["mason-lspconfig"] = { -- overrides `require("mason-lspconfig").setup(...)`
@@ -266,11 +339,18 @@ local config = {
     ["mason-null-ls"] = { -- overrides `require("mason-null-ls").setup(...)`
       -- ensure_installed = { "prettier", "stylua" },
     },
-    ["mason-nvim-dap"] = { -- overrides `require("mason-nvim-dap").setup(...)`
-      -- ensure_installed = { "python" },
-    },
-  },
+    ["mason-nvim-dap"] = {automatic_setup = false}
+    -- bufferline = {
+    --     options = {
+    -- indicator = {
+    --   style = "underline",
+    --   icon = '▎',
+    -- },
+    -- separator_style = "slant",
+    -- },
+    -- },
 
+  },
   -- LuaSnip Options
   luasnip = {
     -- Extend filetypes
@@ -280,10 +360,9 @@ local config = {
     -- Configure luasnip loaders (vscode, lua, and/or snipmate)
     vscode = {
       -- Add paths for including more VS Code style snippets in luasnip
-      paths = {},
-    },
+      paths = {}
+    }
   },
-
   -- CMP Source Priorities
   -- modify here the priorities of default cmp sources
   -- higher value == higher priority
@@ -291,14 +370,8 @@ local config = {
   -- false == disabled
   -- true == 1000
   cmp = {
-    source_priority = {
-      nvim_lsp = 1000,
-      luasnip = 750,
-      buffer = 500,
-      path = 250,
-    },
+    source_priority = {nvim_lsp = 1000, luasnip = 750, buffer = 500, path = 250}
   },
-
   -- Customize Heirline options
   heirline = {
     -- -- Customize different separators between sections
@@ -324,7 +397,6 @@ local config = {
     --   },
     -- },
   },
-
   -- Modify which-key registration (Use this with mappings table in the above.)
   ["which-key"] = {
     -- Add bindings which show up as group name
@@ -335,12 +407,12 @@ local config = {
         ["<leader>"] = {
           -- third key is the key to bring up next level and its displayed
           -- group name in which-key top level menu
-          ["b"] = { name = "Buffer" },
-        },
-      },
-    },
+          ["b"] = {name = "Buffer"},
+          ["m"] = {name = "Hop"}
+        }
+      }
+    }
   },
-
   -- This function is run last and is a good place to configuring
   -- augroups/autocommands and custom filetypes also this just pure lua so
   -- anything that doesn't fit in the normal config locations above can go here
@@ -357,7 +429,7 @@ local config = {
     --     ["~/%.config/foo/.*"] = "fooscript",
     --   },
     -- }
-  end,
+  end
 }
 
 return config
